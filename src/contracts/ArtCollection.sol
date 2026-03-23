@@ -57,4 +57,9 @@ contract ArtCollection is ERC721URIStorage, Ownable {
         }("");
         require(success, "Transfer failed");
     }
+
+    // Views functions (getters)
+    function getMaxSupply() public pure returns (uint256) {
+        return TOKEN_MAX_SUPPLY;
+    }
 }
