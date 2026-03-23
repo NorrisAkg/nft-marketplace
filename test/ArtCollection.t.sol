@@ -21,15 +21,24 @@ contract ArtCollectionTest is Test {
 
     function testMintFailedAfterMaxSupplyReached() external {
         address user1 = makeAddr(userName1);
-        uint256 maxSupply = artCollection.getMaxSupply();
-        vm.startPrank(user1);
-        for (uint256 id = 1; id <= maxSupply; id++) {
-            deal(user1, baseUserEthBalance);
-            artCollection.mint{value: 0.1 ether}();
-        }
-        vm.stopPrank();
+        // uint256 maxSupply = artCollection.getMaxSupply();
 
+        vm.prank(user1);
+        vm.mockCall(
+            address(artCollection),
+            abi.encodeWithSelector(artCollection.getMaxSupply.selector),
+            abi.encode(1000)
+        );
+        vm.store(
+            address(artCollection),
+            bytes32(uint256(9)),
+            bytes32(uint256(1000))
+        );
+        deal(user1, baseUserEthBalance);
+
+        console.log("total minted", artCollection.getMaxSupply());
+        console.log("last token id", artCollection.getLastTokenId());
         vm.expectRevert(ArtCollection__Max_Supply_Reached.selector);
-        artCollection.mint();
+        artCollection.mint{value: 0.1 ether}();
     }
 }
