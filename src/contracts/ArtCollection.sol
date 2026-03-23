@@ -33,9 +33,8 @@ contract ArtCollection is ERC721URIStorage, Ownable {
         if (lastTokenId == TOKEN_MAX_SUPPLY) {
             revert ArtCollection__Max_Supply_Reached();
         }
-        uint256 tokenId = lastTokenId + 1;
         lastTokenId++;
-        _safeMint(msg.sender, tokenId);
+        _safeMint(msg.sender, lastTokenId);
     }
 
     function reveal(string memory newBaseURI) public onlyOwner {
