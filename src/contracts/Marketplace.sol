@@ -32,9 +32,9 @@ contract MarketPlace is ReentrancyGuard {
         uint256 listingPrice;
     }
 
+    IERC721 private immutable COLLECTION_CONTRACT;
     uint256 private constant ROYALTIES_RATIO_PER_THOUSAND = 25; // 2.5 %
     mapping(uint256 tokenId => Listing tokenListing) public tokenListingInfos;
-    IERC721 private immutable COLLECTION_CONTRACT;
 
     constructor(address _collectionContract) {
         COLLECTION_CONTRACT = IERC721(_collectionContract);
