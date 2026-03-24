@@ -2,7 +2,7 @@
 pragma solidity ^0.8.24;
 
 import {ERC721URIStorage} from "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import {ERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import {ERC721, IERC721} from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -56,6 +56,13 @@ contract ArtCollection is ERC721URIStorage, Ownable {
             value: address(this).balance
         }("");
         require(success, "Transfer failed");
+    }
+
+    function setApprovalForAll(
+        address operator,
+        bool approved
+    ) public override(ERC721, IERC721) {
+        super.setApprovalForAll(operator, approved);
     }
 
     // Views functions (getters)

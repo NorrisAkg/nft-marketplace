@@ -17,7 +17,7 @@ contract MarketPlace is ReentrancyGuard {
     event NFTListed(
         uint256 indexed tokenId,
         address indexed seller,
-        uint256 indexed price
+        uint256 price
     );
     event ListingCanceled(uint256 indexed tokenId);
     event TokenOwnershipTransfered(
@@ -32,7 +32,7 @@ contract MarketPlace is ReentrancyGuard {
         uint256 listingPrice;
     }
 
-    uint256 private constant ROYALTIES_RATIO = 250; // 2.5 %
+    uint256 private constant ROYALTIES_RATIO_PER_THOUSAND = 25; // 2.5 %
     mapping(uint256 tokenId => Listing tokenListing) public tokenListingInfos;
     IERC721 private immutable COLLECTION_CONTRACT;
 
@@ -96,6 +96,12 @@ contract MarketPlace is ReentrancyGuard {
         }
     }
 
+    function computeRoyaltiesAmount(
+        uint256 amount
+    ) public pure returns (uint256) {
+        return (amount * ROYALTIES_RATIO_PER_THOUSAND) / 1000;
+    }
+
     // nonReentrant + CEI pattern applied — reentrancy warning is a false positive
     function buyNFT(
         uint256 tokenId
@@ -112,7 +118,7 @@ contract MarketPlace is ReentrancyGuard {
         delete (tokenListingInfos[tokenId]);
         COLLECTION_CONTRACT.safeTransferFrom(tokenOwner, msg.sender, tokenId); // Transfer token ownership
 
-        uint256 royaltiesValue = (msg.value * ROYALTIES_RATIO) / 10000;
+        uint256 royaltiesValue = computeRoyaltiesAmount(msg.value);
         sendEther(tokenOwner, msg.value - royaltiesValue);
 
         emit TokenOwnershipTransfered(
@@ -121,5 +127,18 @@ contract MarketPlace is ReentrancyGuard {
             msg.sender,
             msg.value
         );
+    }
+
+    // Getters
+
+    function getTokenOwner(uint256 tokenId) public view returns (address) {
+        return COLLECTION_CONTRACT.ownerOf(tokenId);
+    }
+
+    function getListingInfos(
+        uint256 tokenId
+    ) public view returns (address seller, uint256 price) {
+        Listing memory listing = tokenListingInfos[tokenId];
+        return (listing.seller, listing.listingPrice);
     }
 }

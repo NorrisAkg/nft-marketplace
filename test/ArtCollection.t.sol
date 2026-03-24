@@ -10,11 +10,13 @@ contract ArtCollectionTest is Test {
     MarketPlace marketplace;
 
     uint256 baseUserEthBalance = 10 ether;
-    string userName1 = "Alice";
-    string userName2 = "Jon";
-    string userName3 = "Bob";
+    address alice = makeAddr("Alice");
+    address jon = makeAddr("Jon");
+    address bob = makeAddr("Bob");
+    address owner = makeAddr("owner");
 
     function setUp() public {
+        vm.prank(owner);
         artCollection = new ArtCollection(
             "My collection",
             "MCT",
@@ -23,8 +25,7 @@ contract ArtCollectionTest is Test {
         marketplace = new MarketPlace(address(artCollection));
     }
 
-    function _mint(string memory _name, uint256 ethAmount) private {
-        address user = makeAddr(_name);
+    function _mint(address user, uint256 ethAmount) private {
         vm.prank(user);
         deal(user, baseUserEthBalance);
         artCollection.mint{value: ethAmount}();
@@ -37,7 +38,7 @@ contract ArtCollectionTest is Test {
 
     function testMintingSuccess() external {
         uint256 artCollectionStartingBalance = address(artCollection).balance;
-        _mint(userName1, 0.1 ether);
+        _mint(alice, 0.1 ether);
         uint256 artCollectionEndingBalance = address(artCollection).balance;
 
         assertEq(artCollection.getLastTokenId(), 1);
@@ -55,7 +56,7 @@ contract ArtCollectionTest is Test {
                 artCollection.getMinimumMintingPrice()
             )
         );
-        _mint(userName1, mintingValue);
+        _mint(alice, mintingValue);
     }
 
     function testMintFailedAfterMaxSupplyReached() external {
@@ -72,6 +73,8 @@ contract ArtCollectionTest is Test {
     function testReveal() external {
         string
             memory newUri = "ipfs://bafybeict2kq6gt4ikgulypt7h7nwj4hmfi2kevrqvnx2osibfulyy5x3hu/time-to-explain.jpeg";
+
+        vm.prank(owner);
         artCollection.reveal(newUri);
 
         assertEq(artCollection.getRevealStatus(), true);
@@ -82,19 +85,30 @@ contract ArtCollectionTest is Test {
     }
 
     function testWithdraw() external {
-        // _mint(userName1, 0.1 ether);
-        // address ownerAddress = address(this);
-        // uint256 ownerStartingBalance = ownerAddress.balance;
-        uint256 artCollectionStartingBalance = address(artCollection).balance;
-        // vm.prank(ownerAddress);
-        artCollection.withdraw();
-        // uint256 artCollectionEndingBalance = address(artCollection).balance;
-        // uint256 ownerEndingBalance = ownerAddress.balance;
+        uint256 ownerStartingBalance = owner.balance;
+        _mint(alice, 0.1 ether);
 
-        // assertEq(
-        //     ownerEndingBalance,
-        //     ownerStartingBalance + artCollectionStartingBalance
-        // );
-        // assertEq(artCollectionEndingBalance, 0);
+        uint256 artCollectionBalanceAfterMinting = address(artCollection)
+            .balance;
+
+        vm.prank(owner);
+        artCollection.withdraw();
+
+        uint256 ownerEndingBalance = owner.balance;
+        uint256 artCollectionEndingBalance = address(artCollection).balance;
+
+        assertEq(
+            ownerEndingBalance,
+            ownerStartingBalance + artCollectionBalanceAfterMinting
+        );
+        assertEq(artCollectionEndingBalance, 0);
+    }
+
+    function testWithdrawFailsIfNotTheOwner() external {
+        _mint(alice, 0.1 ether);
+
+        vm.expectRevert();
+        vm.prank(alice);
+        artCollection.withdraw();
     }
 }
