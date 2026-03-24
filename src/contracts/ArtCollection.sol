@@ -63,7 +63,19 @@ contract ArtCollection is ERC721URIStorage, Ownable {
         return TOKEN_MAX_SUPPLY;
     }
 
+    function getMinimumMintingPrice() public pure returns (uint256) {
+        return TOKEN_MINT_PRICE_IN_ETH;
+    }
+
     function getLastTokenId() public view returns (uint256) {
         return lastTokenId;
+    }
+
+    function getRevealStatus() public view returns (bool) {
+        return revealed;
+    }
+
+    function getBaseTokenUri() public view returns (string memory) {
+        return baseTokenURI;
     }
 }
